@@ -1,0 +1,9 @@
+---
+title: "About"
+---
+
+This is my website! I am a senior at Mount Holyoke College, majoring in statistics.
+
+```{r}
+1 + 1
+```
