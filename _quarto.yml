@@ -4,14 +4,16 @@ project:
 
 website:
   title: "Kunga's website"
-  navbar:
+  navbar: 
     left:
-      - href: index.qmd
-        text: Home
-      - about.qmd
-      - href: project.qmd
-        text: project
+    - href: index.qmd
+      text: Home
+    - href: about.qmd
+      text: About 
+    - href: project.qmd
+      text: Project
 
+      
 format:
   html:
     light: lux
@@ -19,4 +21,6 @@ format:
     fontsize: 12pt
 
 editor: visual
+
+
 
