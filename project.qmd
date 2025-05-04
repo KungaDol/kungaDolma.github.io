@@ -1,0 +1,56 @@
+---
+title: "STAT 244-SC"
+---
+
+# Introduction
+
+The data set that I choose is the transaction from uk-based online retail store. It has transaction from 01/12/2010 and 09/12/2011. The company mainly sells unique all- occasion gifts.
+This data set has 541909 rows. The quantitative variables that this datset have: 
+1.  Quantity: The number of unit of each product purchased. Unit: Count (integer)
+2.  UnitPrice: The price of a single product. Unit: British Pounds Sterling (GBP).
+3.  TotalPrice( we can create this columns), Total value of each transcation(Quanity \* UnitPrice) Unit: British Pounds Sterling (GBP)
+
+The categorical variables present in this dataset:
+1.  Description: The name or description of the product. Categories: WHITE METAL LANTERN,STAR T-LIGHT HOLDER etc
+2.  Country: The country where the customer resides. Categories: France, United Kingdom
+3.  stock code: code of each product (item) Categories: 16258A, 90185C etc..
+
+<https://www.kaggle.com/datasets/carrie1/ecommerce-data>
+
+
+#load packages 
+```{r,setup, include=FALSE}
+knitr::opts_chunk$set(cache = TRUE)
+library(readr)
+library(purrr)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(mosaic)
+library(lubridate)
+library(readxl)
+library(tidyverse)
+library(janitor)
+```
+
+```{r}
+load("dataset/e_commerce_2011.Rdata")
+```
+
+# Data visualization
+
+```{r}
+e_commerce_2011 |>
+  ggplot( aes(x= unit_price)) +
+  geom_density(fill="#69b3a2", color="#e9ecef") + xlim(0,50)
+```
+
+
+
+```{r}
+library(forcats)
+ggplot(e_commerce_2011, aes(x= fct_infreq(country), y=unit_price)) + 
+  geom_bar(stat = "identity") + 
+   theme(axis.text.x = element_text(angle = 90))
+```
+

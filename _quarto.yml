@@ -9,14 +9,14 @@ website:
       - href: index.qmd
         text: Home
       - about.qmd
-      - href: test.qmd
-        text: Test
+      - href: project.qmd
+        text: project
 
 format:
   html:
-    theme: cosmo
-    css: styles.css
-    toc: true
+    light: lux
+    dark: darkly
+    fontsize: 12pt
 
 editor: visual
 

@@ -7,5 +7,17 @@ This is a Quarto website.
 To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
 
 ```{r}
-1 + 1
+coin_0 <- dbinom(x = 2, size = 10, prob = 0.5)/dbinom(x = 2, size = 10, prob = 0.7)
+coin_0
+coin_1 <- dbinom(x = 9, size = 10, prob = 0.5)/dbinom(x = 9, size = 10, prob = 0.7)
+coin_1
+
+```
+
+0.8066 less likely to obtain 9 head in 10 trail
+
+```{r}
+pbinom( q = 6, size = 10, prob = 0.5, lower.tail = FALSE)
+pbinom( q = 6, size = 10, prob = 0.7, lower.tail = TRUE)
+
 ```
