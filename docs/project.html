@@ -169,10 +169,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>The data set that I choose is the transaction from uk-based online retail store. It has transaction from 01/12/2010 and 09/12/2011. The company mainly sells unique all- occasion gifts. This data set has 541909 rows. The quantitative variables that this datset have: 1. Quantity: The number of unit of each product purchased. Unit: Count (integer) 2. UnitPrice: The price of a single product. Unit: British Pounds Sterling (GBP). 3. TotalPrice( we can create this columns), Total value of each transcation(Quanity * UnitPrice) Unit: British Pounds Sterling (GBP)</p>
-<p>The categorical variables present in this dataset: 1. Description: The name or description of the product. Categories: WHITE METAL LANTERN,STAR T-LIGHT HOLDER etc 2. Country: The country where the customer resides. Categories: France, United Kingdom 3. stock code: code of each product (item) Categories: 16258A, 90185C etc..</p>
-<p><a href="https://www.kaggle.com/datasets/carrie1/ecommerce-data" class="uri">https://www.kaggle.com/datasets/carrie1/ecommerce-data</a></p>
-<p>#load packages</p>
+<p>This project explores transactions from a UK-based online retail store, covering the time frame from December 1, 2010, to December 9, 2011. The store specializes in unique, all-occasion gift items, and the dataset contains over 540,000 rows of transactional data.&nbsp;I found this data set in <a href="https://www.kaggle.com/datasets/carrie1/ecommerce-data" class="uri">https://www.kaggle.com/datasets/carrie1/ecommerce-data</a>. Since the dataset is very large, I decided to only focus on july to June 2011, to better understand this dataset .</p>
+<p>The quantitative variables in this data set are:</p>
+<p>&nbsp;1. Quantity: The number of units of each product purchased. Unit: Count (integer)&nbsp;</p>
+<p>2. UnitPrice: The price of a single product. Unit: British Pounds Sterling (GBP).&nbsp;</p>
+<p>3. TotalPrice (we can create this column): The total value of each transaction (Quantity * UnitPrice). Unit: British Pounds Sterling (GBP).&nbsp;&nbsp;</p>
+<p>The categorical variables present in this dataset are:</p>
+<p>&nbsp;1. Description: The name or description of the product.</p>
+<p>2. Country: The country where the customer resides.&nbsp;</p>
+<p>&nbsp;3. Stock code: The code for each product (item).</p>
+<p>My analysis focuses on the relationship between unit price and purchasing behavior across countries. To explore this, I created a density plot to visualize price distribution and a bar plot to show purchase quantities by country.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">load</span>(<span class="st">"dataset/e_commerce_2011.Rdata"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
