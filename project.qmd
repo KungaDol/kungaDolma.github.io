@@ -4,51 +4,68 @@ title: "STAT 244-SC"
 
 # Introduction
 
-This project explores transactions from a UK-based online retail store, covering the time frame from December 1, 2010, to December 9, 2011. The store specializes in unique, all-occasion gift items, and the dataset contains over 540,000 rows of transactional data. I found this data set in <https://www.kaggle.com/datasets/carrie1/ecommerce-data>. Since the dataset is very large, I decided to only focus on july to June 2011, to better understand this dataset .
+This project explores transactions from a UK-based online retail store, covering the time frame from December 1, 2010, to December 9, 2011. The store specializes in unique, all-occasion gift items, and the dataset contains over 540,000 rows of transaction data. I found this dataset in <https://www.kaggle.com/datasets/carrie1/ecommerce-data>.
 
 The quantitative variables in this data set are:
 
- 1. Quantity: The number of units of each product purchased. Unit: Count (integer) 
-
-2\. UnitPrice: The price of a single product. Unit: British Pounds Sterling (GBP). 
-
-3\. TotalPrice (we can create this column): The total value of each transaction (Quantity \* UnitPrice). Unit: British Pounds Sterling (GBP).  
+1.   Quantity: The number of units of each product purchased. Unit: Count (integer).
+2.  UnitPrice: The price of a single product. Unit: British Pounds Sterling (GBP).
+3.  TotalPrice (we can create this column): The total value of each transaction (Quantity \* UnitPrice). Unit: British Pounds Sterling (GBP)   
 
 The categorical variables present in this dataset are:
 
- 1. Description: The name or description of the product.
+1.  Description: The name or description of the product.
+2.   Country: The country where the customer resides.
+3.  Stock code: The code for each product (item).
 
-2\. Country: The country where the customer resides. 
+# Data Context and Data Cleaning
 
- 3. Stock code: The code for each product (item).
+The quantitative aspects I am interested in exploring are: Quantity and Unit Price. Quantity refers to the number of units of each product purchased, while Unit Price is the cost of a single product. Unit: British Pounds Sterling (GBP). Regarding categorical data, I am focused on the Country variable, which indicates where the customer resides. The categories are: France, the United Kingdom, and Australia. The analysis examines the relationship between unit price and purchasing behavior across countries.
 
-My analysis focuses on the relationship between unit price and purchasing behavior across countries. To explore this, I created a density plot to visualize price distribution and a bar plot to show purchase quantities by country.
+As mentioned, the dataset contains approximately 540,000 rows, with each row representing a single item within a transaction. Due to the size of the dataset, it was challenging to visualize the relationship between unit price and country. To address this, I focused on transactions from July and August 2011 and filtered out countries with minimal purchasing activity. Additionally, I excluded the United Kingdom, which dominated the dataset with around 200,000 rows, introducing outliers that made it difficult to interpret purchasing behavior in other countries. These filters allowed for a more balanced analysis of the data. This helps to understand the dataset better, along with countries' purchasing behavior. To explore this, I created a density plot to visualize price distribution and a bar plot to show purchase quantities by country.
 
-```{r,setup, include=FALSE}
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = TRUE, error = TRUE)
+
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(tidymodels)
+  library(conflicted)
+})
+conflicts_prefer(base::max)
+```
+
+
+```{r load-package, include=FALSE}
 knitr::opts_chunk$set(cache = TRUE)
-library(readr)
-library(purrr)
 library(dplyr)
 library(ggplot2)
-library(gridExtra)
-library(mosaic)
 library(lubridate)
-library(readxl)
-library(tidyverse)
-library(janitor)
+library(palmerpenguins)
+library(factoextra)
+library(amap)
 ```
 
 ```{r}
-load("dataset/e_commerce_2011.Rdata")
+load("data/e_commerce_2011.Rdata")
 ```
 
-# Data visualization
+```{r}
+summary(e_commerce_2011$quantity)
+sd(e_commerce_2011$unit_price)
+stats::var(e_commerce_2011$unit_price)
+stats::IQR(e_commerce_2011$unit_price)
+```
+
+## Data visualization
 
 ```{r}
 e_commerce_2011 |>
   ggplot( aes(x= unit_price)) +
   geom_density(fill="#69b3a2", color="#e9ecef") + xlim(0,50)
 ```
+This density plot of unit price reveals a right-skewed distribution, indicating that most transactions involved low-priced products. The peak occurs between £0 and £5, suggesting that customers—across multiple countries—tend to purchase inexpensive gift items. A smaller number of transactions occur around £10–£20, with very few purchases above £30, and some outliers close to £50. This pattern highlights a general preference for lower-cost products, though a small portion of customers are willing to spend more on select items.
 
 ```{r}
 library(forcats)
@@ -56,3 +73,235 @@ ggplot(e_commerce_2011, aes(x= fct_infreq(country), y=unit_price)) +
   geom_bar(stat = "identity") + 
    theme(axis.text.x = element_text(angle = 90))
 ```
+This bar plot shows the total unit price of purchases across different countries after excluding the United Kingdom. Germany emerges as the highest buyer, followed closely by EIRE (Ireland) and France, suggesting stronger purchasing activity in these regions. On the other end, Portugal shows the lowest total unit price, followed by Finland and Australia, indicating fewer or smaller transactions. This visualization helps highlight regional purchasing trends and emphasizes countries that contribute more significantly to total sales.
+
+## Implementing the machine learning techniques
+
+### Cross Validation (CV) 
+
+Cross validation is process of spiting the data into test and training data in order to get a better prediction model.
+we use **k-fold cross-validation** to estimate the typical error in our model predictions for *new* data:
+
+-   Divide the data into $k$ folds (or groups) of approximately equal size.\
+-   Repeat the following procedures for each fold $j = 1,2,...,k$:
+    -   Remove fold $j$ from the data set.\
+    -   Fit a model using the data in the other $k-1$ folds (training).\
+    -   Use this model to predict the responses for the $n_j$ cases in fold $j$: $\hat{y}_1, ..., \hat{y}_{n_j}$.\
+    -   Calculate the MAE for fold $j$ (testing): $\text{MAE}_j = \frac{1}{n_j}\sum_{i=1}^{n_j} |y_i - \hat{y}_i|$.
+$$\text{CV}_{(k)} = \frac{1}{k} \sum_{j=1}^k \text{MAE}_j$$
+
+The goal of the use of CV is provide accurate estimate of the model and prevent overfitting. The linear model for this model is: 
+
+$$\ Y = \beta_0(UnitPrice) + \beta_1(country) + \beta_2(quantity)$$
+$$\ Y = \beta_0(UnitPrice) + \beta_1(country) + \beta_2(quantity) + \beta_3(invoice_date)$$
+To implement this CV, we applied 50/50 cross-validation by splitting the dataset (2,653 observations) into a training set of 1,331 and a test set of 1,322. Our chosen error metric is MAE (Mean Absolute Error), defined as:
+ $\text{MAE}_j = \frac{1}{n_j}\sum_{i=1}^{n_j} |y_i - \hat{y}_i|$ 
+
+We used MAE to know how well the model is performing by measuring the means of predicted and actual values. This help us evaluate and improve the model in the training stage to get more accurate prediction on new data. The advantage of used of MAE is that it is easy to interpret and understand. It is sensitive to outlier. 
+
+## Implement k-fold cross validation for k = 10.
+
+```{r}
+# Step 1: Model specification
+lm_spec <- linear_reg() %>% 
+  # Output Y is quantitative
+  set_mode("regression") %>%
+  # Want regression to be lienar
+  set_engine("lm")
+```
+
+```{r}
+e_commerce_fit <-lm_spec %>% 
+  fit(unit_price~country, data = e_commerce_2011)
+```
+
+```{r cv_setyp, include=FALSE}
+knitr::opts_chunk$set(cache = TRUE)
+set.seed(244)
+e_commerce_cv = lm_spec %>%
+  fit_resamples(
+    unit_price~country,
+    resamples = vfold_cv(e_commerce_2011, v = 10),
+    metrics = metric_set(mae, rmse, rsq)
+ )
+```
+
+```{r}
+e_commerce_cv %>% collect_metrics()
+```
+
+```{r cv-fold, include=FALSE}
+knitr::opts_chunk$set(cache = TRUE)
+
+library(dplyr)
+e_commerce_cv %>% unnest(.metrics) %>%
+  dplyr::filter(.metric == "mae")
+ #filter(.metric == "mae")
+```
+
+```{r}
+model_1 <- lm_spec%>%
+ fit(unit_price~country + quantity, data = e_commerce_2011)
+
+model_2 <- lm_spec%>%
+ fit(unit_price ~ country * quantity+ invoice_date, data =  e_commerce_2011)
+```
+
+```{r}
+model_1 %>% glance()
+```
+
+
+```{r}
+model_2 %>% glance()
+```
+
+```{r}
+model_1 %>%
+ augment(new_data =e_commerce_2011) %>%
+ mae(truth = unit_price, estimate = .pred)
+```
+
+```{r}
+model_2 %>%
+ augment(new_data = e_commerce_2011) %>%
+ mae(truth = unit_price, estimate = .pred)
+```
+
+```{r cv_mae, include=FALSE }
+knitr::opts_chunk$set(cache = TRUE)
+# 10-fold cross-validation for model_1
+ set.seed(244)
+ model_1_cv<- lm_spec%>%
+   fit_resamples(unit_price~country + quantity, 
+       resamples= vfold_cv(e_commerce_2011, v = 10),
+       metrics = metric_set(mae, rsq)
+ )
+```
+
+```{r echo=TRUE,eval = FALSE}
+knitr::opts_chunk$set(cache = TRUE)
+# 10-fold cross-validation for model_2
+ set.seed(244)
+ model_2_cv<- lm_spec%>%
+   fit_resamples(unit_price ~ country * quantity + invoice_date,
+                  resamples= vfold_cv(e_commerce_2011, v = 10),
+                 metrics = metric_set(mae, rsq)
+ )
+```
+
+7. Display evaluation metrics for your different models in a clean, organized way.  This display should include both the estimated CV metric as well as its standard deviation.  
+
+```{r}
+model_1_cv %>% collect_metrics()
+```
+
+
+```{r}
+model_2_cv %>% collect_metrics()
+```
+
+```{r}
+model_1_cv %>%
+  unnest(.metrics) %>%
+  dplyr::filter(.metric =="mae") %>%
+  summarize(base::mean(.estimate))
+```
+
+```{r}
+model_2_cv %>%
+  unnest(.metrics) %>%
+  dplyr::filter(.metric =="mae") %>%
+  summarize(base::mean(.estimate))
+```
+### CV: Comparing the models 
+
+| Model     | IN-SAMPLE MAE | 10-fold CV MAE |
+|:----------|--------------:|---------------:|
+| `model_1` |    3.374663 	|     3.406162	 |
+| `model_2` |    3.400458   |     3.464405	 |
+
+Based on both the in-sample and cross-validation MAE, model_1 performs slightly better. For model_1, the MAE is consistent across training (3.37) and validation (3.41), suggesting that the model generalizes well to new data. In contrast, model_2 has a slightly higher CV MAE (3.46) than its in-sample MAE (3.40), indicating potential overfitting — it may not perform as well on unseen data.
+
+Based on the in-sample MAE and CV MAE,, model 1 appears to be performing little better. For model 1, it looks like the MAE is consistent it’s measured in sample (3.37) and CV (3.41). However, model 2 seem slightly higher CV MAE (3.46) than in - sample MAE(3.40), suggesting overfitting.
+
+# Unsupervised Learning with K-Means Clustering
+
+K-means is a simple approach for partitioning a dataset into K distinct, nonoverlapping clusters. It is used to classify observations into K groups, based on their similarity. 
+Let $C_i$ f $i = 1,2,...,k$ and represents the clusters and $W(C_i)$. 
+It mimized the sum of K with cluster. 
+
+$$
+\min_{C_1, \dots, C_K} \sum_{i=1}^{K} W(C_i)
+$$
+We are using MAE to calculate the error metric. MAE IS measure the average OF actual and prediction value. 
+
+### Show visuals to demonstrate your clustering. 
+
+```{r}
+e_commerce_2011 <- e_commerce_2011 %>%
+  dplyr::filter(!is.na(invoice_no) & !is.na(description) & !is.na(stock_code)
+         & !is.na(quantity) & !is.na(invoice_date) & !is.na(unit_price)
+         & !is.na(customer_id & !is.na(country)))
+ # Make data table (named penguins_reduced) that only has
+ # bill_length_mm and bill_depth_mm columns
+e_commerce_2011_reduced <- e_commerce_2011 %>% select(unit_price, quantity)
+```
+
+
+```{r}
+set.seed(244)
+ # Run the K-means algorithm
+ kmeans_3_round_1 <- kmeans(scale(e_commerce_2011_reduced), centers = 3)
+ # Plot the cluster assignments
+ e_commerce_2011_reduced %>%
+ mutate(kmeans_cluster = as.factor(kmeans_3_round_1$cluster)) %>%
+   ggplot(aes(x = unit_price, y =quantity, color = kmeans_cluster))+
+   geom_point(size = 3) +
+   theme(legend.position = "none") +
+   labs(title = "K-Mean")+
+   theme_minimal()
+ 
+```
+
+
+### K-Means Clusters Versus Known country Groupings
+```{r}
+ggplot(data = e_commerce_2011, aes(x = unit_price, y =quantity, color =
+ country)) +
+ geom_point(size = 3) +
+ theme(legend.position = "none") +
+ labs(title = "cluste by each country") +
+ theme_minimal()
+```
+
+The chart displayed illustrates the grouping of transactions based on unit price and quantity purchased, with clusters representing different purchasing patterns. The distribution seems to be right-skewed, which implies that the majority of countries prefer to buy products at lower prices. Countries such as Australia, Finland, and EIRE shows transactions involving higher quantities (approximately 400 units), indicating a tendency for bulk purchases. In contrast, Switzerland seems to have transactions concentrated near zero quantity, suggesting fewer or smaller purchases. These clusters could represent  different consumer behaviors, economic influences, or market sizes among different countries.
+
+### Justify the choice of the number of clusters (K) with Silhouette.
+
+```{r}
+ fviz_nbclust(scale(e_commerce_2011_reduced), kmeans, method='silhouette')
+
+```
+ 
+
+```{r}
+set.seed(244)
+k_2_manattan = Kmeans(scale(e_commerce_2011_reduced), centers = 3,
+ method = "manhattan")
+k_2_euclid = Kmeans(scale(e_commerce_2011_reduced), centers = 3,
+ method = "euclidean")
+k_2_maxnorm = Kmeans(scale(e_commerce_2011_reduced), centers = 3,
+ method = "maximum")
+
+fviz_cluster(k_2_euclid, data = scale(e_commerce_2011_reduced),
+ main = sprintf("K = %d Clusters w/ Manhattan Distance", 3))
+```
+
+ The optimal value for %k% means appear to be k = 3 because: 
+
+Cluster 1 includes nations that buy in quantity (about 400 units) at reduced unit costs, indicating wholesale or bulk buying practices.
+
+Cluster 2 includes countries with very low numbers (almost nil), which suggests that they make little or no purchases.
+
+Cluster 3  includes countries that have a tendency to buy more expensive goods in lesser numbers, which may be a sign of premium or discerning consumer behavior.

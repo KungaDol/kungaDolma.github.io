@@ -101,6 +101,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -169,43 +198,56 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>This project explores transactions from a UK-based online retail store, covering the time frame from December 1, 2010, to December 9, 2011. The store specializes in unique, all-occasion gift items, and the dataset contains over 540,000 rows of transactional data.&nbsp;I found this data set in <a href="https://www.kaggle.com/datasets/carrie1/ecommerce-data" class="uri">https://www.kaggle.com/datasets/carrie1/ecommerce-data</a>. Since the dataset is very large, I decided to only focus on july to June 2011, to better understand this dataset .</p>
+<p>This project explores transactions from a UK-based online retail store, covering the time frame from December 1, 2010, to December 9, 2011. The store specializes in unique, all-occasion gift items, and the dataset contains over 540,000 rows of transaction data. I found this dataset in <a href="https://www.kaggle.com/datasets/carrie1/ecommerce-data" class="uri">https://www.kaggle.com/datasets/carrie1/ecommerce-data</a>.</p>
 <p>The quantitative variables in this data set are:</p>
-<p>&nbsp;1. Quantity: The number of units of each product purchased. Unit: Count (integer)&nbsp;</p>
-<p>2. UnitPrice: The price of a single product. Unit: British Pounds Sterling (GBP).&nbsp;</p>
-<p>3. TotalPrice (we can create this column): The total value of each transaction (Quantity * UnitPrice). Unit: British Pounds Sterling (GBP).&nbsp;&nbsp;</p>
+<ol type="1">
+<li>Quantity: The number of units of each product purchased. Unit: Count (integer).</li>
+<li>UnitPrice: The price of a single product. Unit: British Pounds Sterling (GBP).</li>
+<li>TotalPrice (we can create this column): The total value of each transaction (Quantity * UnitPrice). Unit: British Pounds Sterling (GBP) &nbsp;&nbsp;</li>
+</ol>
 <p>The categorical variables present in this dataset are:</p>
-<p>&nbsp;1. Description: The name or description of the product.</p>
-<p>2. Country: The country where the customer resides.&nbsp;</p>
-<p>&nbsp;3. Stock code: The code for each product (item).</p>
-<p>My analysis focuses on the relationship between unit price and purchasing behavior across countries. To explore this, I created a density plot to visualize price distribution and a bar plot to show purchase quantities by country.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">load</span>(<span class="st">"dataset/e_commerce_2011.Rdata"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<ol type="1">
+<li>Description: The name or description of the product.</li>
+<li>Country: The country where the customer resides.</li>
+<li>Stock code: The code for each product (item).</li>
+</ol>
 </section>
-<section id="data-visualization" class="level1">
-<h1>Data visualization</h1>
+<section id="data-context-and-data-cleaning" class="level1">
+<h1>Data Context and Data Cleaning</h1>
+<p>The quantitative aspects I am interested in exploring are: Quantity and Unit Price. Quantity refers to the number of units of each product purchased, while Unit Price is the cost of a single product. Unit: British Pounds Sterling (GBP). Regarding categorical data, I am focused on the Country variable, which indicates where the customer resides. The categories are: France, the United Kingdom, and Australia. The analysis examines the relationship between unit price and purchasing behavior across countries.</p>
+<p>As mentioned, the dataset contains approximately 540,000 rows, with each row representing a single item within a transaction. Due to the size of the dataset, it was challenging to visualize the relationship between unit price and country. To address this, I focused on transactions from July and August 2011 and filtered out countries with minimal purchasing activity. Additionally, I excluded the United Kingdom, which dominated the dataset with around 200,000 rows, introducing outliers that made it difficult to interpret purchasing behavior in other countries. These filters allowed for a more balanced analysis of the data. This helps to understand the dataset better, along with countries’ purchasing behavior. To explore this, I created a density plot to visualize price distribution and a bar plot to show purchase quantities by country.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>e_commerce_2011 <span class="sc">|&gt;</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>( <span class="fu">aes</span>(<span class="at">x=</span> unit_price)) <span class="sc">+</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_density</span>(<span class="at">fill=</span><span class="st">"#69b3a2"</span>, <span class="at">color=</span><span class="st">"#e9ecef"</span>) <span class="sc">+</span> <span class="fu">xlim</span>(<span class="dv">0</span>,<span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">load</span>(<span class="st">"data/e_commerce_2011.Rdata"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(e_commerce_2011<span class="sc">$</span>quantity)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   1.00    6.00   12.00   19.46   16.00  432.00 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sd</span>(e_commerce_2011<span class="sc">$</span>unit_price)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 14.16904</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>stats<span class="sc">::</span><span class="fu">var</span>(e_commerce_2011<span class="sc">$</span>unit_price)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 200.7616</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>stats<span class="sc">::</span><span class="fu">IQR</span>(e_commerce_2011<span class="sc">$</span>unit_price)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2.9</code></pre>
+</div>
+</div>
+<section id="data-visualization" class="level2">
+<h2 class="anchored" data-anchor-id="data-visualization">Data visualization</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>e_commerce_2011 <span class="sc">|&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>( <span class="fu">aes</span>(<span class="at">x=</span> unit_price)) <span class="sc">+</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_density</span>(<span class="at">fill=</span><span class="st">"#69b3a2"</span>, <span class="at">color=</span><span class="st">"#e9ecef"</span>) <span class="sc">+</span> <span class="fu">xlim</span>(<span class="dv">0</span>,<span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning: Removed 3 rows containing non-finite outside the scale range
 (`stat_density()`).</code></pre>
 </div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="project_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(forcats)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(e_commerce_2011, <span class="fu">aes</span>(<span class="at">x=</span> <span class="fu">fct_infreq</span>(country), <span class="at">y=</span>unit_price)) <span class="sc">+</span> </span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>) <span class="sc">+</span> </span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -214,8 +256,299 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
+<p>This density plot of unit price reveals a right-skewed distribution, indicating that most transactions involved low-priced products. The peak occurs between £0 and £5, suggesting that customers—across multiple countries—tend to purchase inexpensive gift items. A smaller number of transactions occur around £10–£20, with very few purchases above £30, and some outliers close to £50. This pattern highlights a general preference for lower-cost products, though a small portion of customers are willing to spend more on select items.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(forcats)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(e_commerce_2011, <span class="fu">aes</span>(<span class="at">x=</span> <span class="fu">fct_infreq</span>(country), <span class="at">y=</span>unit_price)) <span class="sc">+</span> </span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">"identity"</span>) <span class="sc">+</span> </span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">90</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>This bar plot shows the total unit price of purchases across different countries after excluding the United Kingdom. Germany emerges as the highest buyer, followed closely by EIRE (Ireland) and France, suggesting stronger purchasing activity in these regions. On the other end, Portugal shows the lowest total unit price, followed by Finland and Australia, indicating fewer or smaller transactions. This visualization helps highlight regional purchasing trends and emphasizes countries that contribute more significantly to total sales.</p>
+</section>
+<section id="implementing-the-machine-learning-techniques" class="level2">
+<h2 class="anchored" data-anchor-id="implementing-the-machine-learning-techniques">Implementing the machine learning techniques</h2>
+<section id="cross-validation-cv" class="level3">
+<h3 class="anchored" data-anchor-id="cross-validation-cv">Cross Validation (CV)</h3>
+<p>Cross validation is process of spiting the data into test and training data in order to get a better prediction model. we use <strong>k-fold cross-validation</strong> to estimate the typical error in our model predictions for <em>new</em> data:</p>
+<ul>
+<li>Divide the data into <span class="math inline">\(k\)</span> folds (or groups) of approximately equal size.<br>
+</li>
+<li>Repeat the following procedures for each fold <span class="math inline">\(j = 1,2,...,k\)</span>:
+<ul>
+<li>Remove fold <span class="math inline">\(j\)</span> from the data set.<br>
+</li>
+<li>Fit a model using the data in the other <span class="math inline">\(k-1\)</span> folds (training).<br>
+</li>
+<li>Use this model to predict the responses for the <span class="math inline">\(n_j\)</span> cases in fold <span class="math inline">\(j\)</span>: <span class="math inline">\(\hat{y}_1, ..., \hat{y}_{n_j}\)</span>.<br>
+</li>
+<li>Calculate the MAE for fold <span class="math inline">\(j\)</span> (testing): <span class="math inline">\(\text{MAE}_j = \frac{1}{n_j}\sum_{i=1}^{n_j} |y_i - \hat{y}_i|\)</span>. <span class="math display">\[\text{CV}_{(k)} = \frac{1}{k} \sum_{j=1}^k \text{MAE}_j\]</span></li>
+</ul></li>
+</ul>
+<p>The goal of the use of CV is provide accurate estimate of the model and prevent overfitting. The linear model for this model is:</p>
+<p><span class="math display">\[\ Y = \beta_0(UnitPrice) + \beta_1(country) + \beta_2(quantity)\]</span> <span class="math display">\[\ Y = \beta_0(UnitPrice) + \beta_1(country) + \beta_2(quantity) + \beta_3(invoice_date)\]</span> To implement this CV, we applied 50/50 cross-validation by splitting the dataset (2,653 observations) into a training set of 1,331 and a test set of 1,322. Our chosen error metric is MAE (Mean Absolute Error), defined as: <span class="math inline">\(\text{MAE}_j = \frac{1}{n_j}\sum_{i=1}^{n_j} |y_i - \hat{y}_i|\)</span></p>
+<p>We used MAE to know how well the model is performing by measuring the means of predicted and actual values. This help us evaluate and improve the model in the training stage to get more accurate prediction on new data. The advantage of used of MAE is that it is easy to interpret and understand. It is sensitive to outlier.</p>
+</section>
+</section>
+<section id="implement-k-fold-cross-validation-for-k-10." class="level2">
+<h2 class="anchored" data-anchor-id="implement-k-fold-cross-validation-for-k-10.">Implement k-fold cross validation for k = 10.</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 1: Model specification</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>lm_spec <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Output Y is quantitative</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Want regression to be lienar</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"lm"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>e_commerce_fit <span class="ot">&lt;-</span>lm_spec <span class="sc">%&gt;%</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(unit_price<span class="sc">~</span>country, <span class="at">data =</span> e_commerce_2011)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>e_commerce_cv <span class="sc">%&gt;%</span> <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 6
+  .metric .estimator     mean     n std_err .config             
+  &lt;chr&gt;   &lt;chr&gt;         &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               
+1 mae     standard    3.42       10 0.240   Preprocessor1_Model1
+2 rmse    standard   10.4        10 3.25    Preprocessor1_Model1
+3 rsq     standard    0.00504    10 0.00304 Preprocessor1_Model1</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>model_1 <span class="ot">&lt;-</span> lm_spec<span class="sc">%&gt;%</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">fit</span>(unit_price<span class="sc">~</span>country <span class="sc">+</span> quantity, <span class="at">data =</span> e_commerce_2011)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>model_2 <span class="ot">&lt;-</span> lm_spec<span class="sc">%&gt;%</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a> <span class="fu">fit</span>(unit_price <span class="sc">~</span> country <span class="sc">*</span> quantity<span class="sc">+</span> invoice_date, <span class="at">data =</span>  e_commerce_2011)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>model_1 <span class="sc">%&gt;%</span> <span class="fu">glance</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 12
+  r.squared adj.r.squared sigma statistic p.value    df  logLik    AIC    BIC
+      &lt;dbl&gt;         &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
+1   0.00970       0.00597  14.1      2.60 0.00390    10 -10821. 21666. 21736.
+# ℹ 3 more variables: deviance &lt;dbl&gt;, df.residual &lt;int&gt;, nobs &lt;int&gt;</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>model_2 <span class="sc">%&gt;%</span> <span class="fu">glance</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 12
+  r.squared adj.r.squared sigma statistic    p.value    df  logLik    AIC    BIC
+      &lt;dbl&gt;         &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
+1    0.0301        0.0228  14.0      4.10    2.57e-9    20 -10793. 21630. 21760.
+# ℹ 3 more variables: deviance &lt;dbl&gt;, df.residual &lt;int&gt;, nobs &lt;int&gt;</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>model_1 <span class="sc">%&gt;%</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">augment</span>(<span class="at">new_data =</span>e_commerce_2011) <span class="sc">%&gt;%</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">mae</span>(<span class="at">truth =</span> unit_price, <span class="at">estimate =</span> .pred)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  .metric .estimator .estimate
+  &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+1 mae     standard        3.37</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>model_2 <span class="sc">%&gt;%</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">augment</span>(<span class="at">new_data =</span> e_commerce_2011) <span class="sc">%&gt;%</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">mae</span>(<span class="at">truth =</span> unit_price, <span class="at">estimate =</span> .pred)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  .metric .estimator .estimate
+  &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+1 mae     standard        3.40</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">cache =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 10-fold cross-validation for model_2</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">set.seed</span>(<span class="dv">244</span>)</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a> model_2_cv<span class="ot">&lt;-</span> lm_spec<span class="sc">%&gt;%</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit_resamples</span>(unit_price <span class="sc">~</span> country <span class="sc">*</span> quantity <span class="sc">+</span> invoice_date,</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">resamples=</span> <span class="fu">vfold_cv</span>(e_commerce_2011, <span class="at">v =</span> <span class="dv">10</span>),</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>                 <span class="at">metrics =</span> <span class="fu">metric_set</span>(mae, rsq)</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a> )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ol start="7" type="1">
+<li>Display evaluation metrics for your different models in a clean, organized way. This display should include both the estimated CV metric as well as its standard deviation.</li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>model_1_cv <span class="sc">%&gt;%</span> <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 6
+  .metric .estimator    mean     n std_err .config             
+  &lt;chr&gt;   &lt;chr&gt;        &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               
+1 mae     standard   3.41       10 0.239   Preprocessor1_Model1
+2 rsq     standard   0.00497    10 0.00181 Preprocessor1_Model1</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>model_2_cv <span class="sc">%&gt;%</span> <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in eval(expr, envir, enclos): object 'model_2_cv' not found</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>model_1_cv <span class="sc">%&gt;%</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest</span>(.metrics) <span class="sc">%&gt;%</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(.metric <span class="sc">==</span><span class="st">"mae"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(base<span class="sc">::</span><span class="fu">mean</span>(.estimate))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 1
+  `base::mean(.estimate)`
+                    &lt;dbl&gt;
+1                    3.41</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>model_2_cv <span class="sc">%&gt;%</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest</span>(.metrics) <span class="sc">%&gt;%</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(.metric <span class="sc">==</span><span class="st">"mae"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(base<span class="sc">::</span><span class="fu">mean</span>(.estimate))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in eval(expr, envir, enclos): object 'model_2_cv' not found</code></pre>
+</div>
+</div>
+<section id="cv-comparing-the-models" class="level3">
+<h3 class="anchored" data-anchor-id="cv-comparing-the-models">CV: Comparing the models</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Model</th>
+<th style="text-align: right;">IN-SAMPLE MAE</th>
+<th style="text-align: right;">10-fold CV MAE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>model_1</code></td>
+<td style="text-align: right;">3.374663</td>
+<td style="text-align: right;">3.406162</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>model_2</code></td>
+<td style="text-align: right;">3.400458</td>
+<td style="text-align: right;">3.464405</td>
+</tr>
+</tbody>
+</table>
+<p>Based on both the in-sample and cross-validation MAE, model_1 performs slightly better. For model_1, the MAE is consistent across training (3.37) and validation (3.41), suggesting that the model generalizes well to new data. In contrast, model_2 has a slightly higher CV MAE (3.46) than its in-sample MAE (3.40), indicating potential overfitting — it may not perform as well on unseen data.</p>
+<p>Based on the in-sample MAE and CV MAE,, model 1 appears to be performing little better. For model 1, it looks like the MAE is consistent it’s measured in sample (3.37) and CV (3.41). However, model 2 seem slightly higher CV MAE (3.46) than in - sample MAE(3.40), suggesting overfitting.</p>
+</section>
+</section>
+</section>
+<section id="unsupervised-learning-with-k-means-clustering" class="level1">
+<h1>Unsupervised Learning with K-Means Clustering</h1>
+<p>K-means is a simple approach for partitioning a dataset into K distinct, nonoverlapping clusters. It is used to classify observations into K groups, based on their similarity. Let <span class="math inline">\(C_i\)</span> f <span class="math inline">\(i = 1,2,...,k\)</span> and represents the clusters and <span class="math inline">\(W(C_i)\)</span>. It mimized the sum of K with cluster.</p>
+<p><span class="math display">\[
+\min_{C_1, \dots, C_K} \sum_{i=1}^{K} W(C_i)
+\]</span> We are using MAE to calculate the error metric. MAE IS measure the average OF actual and prediction value.</p>
+<section id="show-visuals-to-demonstrate-your-clustering." class="level3">
+<h3 class="anchored" data-anchor-id="show-visuals-to-demonstrate-your-clustering.">Show visuals to demonstrate your clustering.</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>e_commerce_2011 <span class="ot">&lt;-</span> e_commerce_2011 <span class="sc">%&gt;%</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(invoice_no) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(description) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(stock_code)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>         <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(quantity) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(invoice_date) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(unit_price)</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>         <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(customer_id <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(country)))</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a> <span class="co"># Make data table (named penguins_reduced) that only has</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a> <span class="co"># bill_length_mm and bill_depth_mm columns</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>e_commerce_2011_reduced <span class="ot">&lt;-</span> e_commerce_2011 <span class="sc">%&gt;%</span> <span class="fu">select</span>(unit_price, quantity)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">244</span>)</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a> <span class="co"># Run the K-means algorithm</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a> kmeans_3_round_1 <span class="ot">&lt;-</span> <span class="fu">kmeans</span>(<span class="fu">scale</span>(e_commerce_2011_reduced), <span class="at">centers =</span> <span class="dv">3</span>)</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a> <span class="co"># Plot the cluster assignments</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a> e_commerce_2011_reduced <span class="sc">%&gt;%</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a> <span class="fu">mutate</span>(<span class="at">kmeans_cluster =</span> <span class="fu">as.factor</span>(kmeans_3_round_1<span class="sc">$</span>cluster)) <span class="sc">%&gt;%</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>   <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> unit_price, <span class="at">y =</span>quantity, <span class="at">color =</span> kmeans_cluster))<span class="sc">+</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>   <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>   <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"K-Mean"</span>)<span class="sc">+</span></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>   <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="k-means-clusters-versus-known-country-groupings" class="level3">
+<h3 class="anchored" data-anchor-id="k-means-clusters-versus-known-country-groupings">K-Means Clusters Versus Known country Groupings</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> e_commerce_2011, <span class="fu">aes</span>(<span class="at">x =</span> unit_price, <span class="at">y =</span>quantity, <span class="at">color =</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a> country)) <span class="sc">+</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a> <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a> <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"cluste by each country"</span>) <span class="sc">+</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a> <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The chart displayed illustrates the grouping of transactions based on unit price and quantity purchased, with clusters representing different purchasing patterns. The distribution seems to be right-skewed, which implies that the majority of countries prefer to buy products at lower prices. Countries such as Australia, Finland, and EIRE shows transactions involving higher quantities (approximately 400 units), indicating a tendency for bulk purchases. In contrast, Switzerland seems to have transactions concentrated near zero quantity, suggesting fewer or smaller purchases. These clusters could represent different consumer behaviors, economic influences, or market sizes among different countries.</p>
+</section>
+<section id="justify-the-choice-of-the-number-of-clusters-k-with-silhouette." class="level3">
+<h3 class="anchored" data-anchor-id="justify-the-choice-of-the-number-of-clusters-k-with-silhouette.">Justify the choice of the number of clusters (K) with Silhouette.</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a> <span class="fu">fviz_nbclust</span>(<span class="fu">scale</span>(e_commerce_2011_reduced), kmeans, <span class="at">method=</span><span class="st">'silhouette'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">244</span>)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>k_2_manattan <span class="ot">=</span> <span class="fu">Kmeans</span>(<span class="fu">scale</span>(e_commerce_2011_reduced), <span class="at">centers =</span> <span class="dv">3</span>,</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a> <span class="at">method =</span> <span class="st">"manhattan"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: did not converge in 10 iterations</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>k_2_euclid <span class="ot">=</span> <span class="fu">Kmeans</span>(<span class="fu">scale</span>(e_commerce_2011_reduced), <span class="at">centers =</span> <span class="dv">3</span>,</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a> <span class="at">method =</span> <span class="st">"euclidean"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: did not converge in 10 iterations</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>k_2_maxnorm <span class="ot">=</span> <span class="fu">Kmeans</span>(<span class="fu">scale</span>(e_commerce_2011_reduced), <span class="at">centers =</span> <span class="dv">3</span>,</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a> <span class="at">method =</span> <span class="st">"maximum"</span>)</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_cluster</span>(k_2_euclid, <span class="at">data =</span> <span class="fu">scale</span>(e_commerce_2011_reduced),</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a> <span class="at">main =</span> <span class="fu">sprintf</span>(<span class="st">"K = %d Clusters w/ Manhattan Distance"</span>, <span class="dv">3</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="project_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The optimal value for %k% means appear to be k = 3 because:</p>
+<p>Cluster 1 includes nations that buy in quantity (about 400 units) at reduced unit costs, indicating wholesale or bulk buying practices.</p>
+<p>Cluster 2 includes countries with very low numbers (almost nil), which suggests that they make little or no purchases.</p>
+<p>Cluster 3 includes countries that have a tendency to buy more expensive goods in lesser numbers, which may be a sign of premium or discerning consumer behavior.</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
