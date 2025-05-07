@@ -53,9 +53,9 @@ load("data/e_commerce_2011.Rdata")
 
 ```{r}
 summary(e_commerce_2011$quantity)
-sd(e_commerce_2011$unit_price)
-stats::var(e_commerce_2011$unit_price)
-stats::IQR(e_commerce_2011$unit_price)
+#(e_commerce_2011$unit_price)
+#stats::var(e_commerce_2011$unit_price)
+#stats::IQR(e_commerce_2011$unit_price)
 ```
 
 ## Data visualization
@@ -63,15 +63,27 @@ stats::IQR(e_commerce_2011$unit_price)
 ```{r}
 e_commerce_2011 |>
   ggplot( aes(x= unit_price)) +
-  geom_density(fill="#69b3a2", color="#e9ecef") + xlim(0,50)
+  geom_density(fill="#69b3a2", color="#e9ecef") + xlim(0,50)+
+  labs(
+    title = "Density Plot of unit price",
+    x = "Unit Price ",
+    y = "Density"
+  ) +
+  theme_minimal()
+  
 ```
-This density plot of unit price reveals a right-skewed distribution, indicating that most transactions involved low-priced products. The peak occurs between £0 and £5, suggesting that customers—across multiple countries—tend to purchase inexpensive gift items. A smaller number of transactions occur around £10–£20, with very few purchases above £30, and some outliers close to £50. This pattern highlights a general preference for lower-cost products, though a small portion of customers are willing to spend more on select items.
+This density plot of unit price reveals a right-skewed distribution, indicating that most transactions involved low-priced products. The peak occurs between £0 and £5, suggesting that customers—across multiple countries—tend to purchase inexpensive gift items. A smaller number of transactions occur around £10–£20, with very few purchases above £30, and some outliers close to £50. This pattern highlights a general preference for lower-cost products, though a small portion of customers are willing to spend more on select items. 
 
 ```{r}
 library(forcats)
 ggplot(e_commerce_2011, aes(x= fct_infreq(country), y=unit_price)) + 
-  geom_bar(stat = "identity") + 
-   theme(axis.text.x = element_text(angle = 90))
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Bar plot of Unit Price & Country",
+    x = "Country",
+    y = "Unit Price "
+  ) +
+  theme(axis.text.x = element_text(angle = 90))
 ```
 This bar plot shows the total unit price of purchases across different countries after excluding the United Kingdom. Germany emerges as the highest buyer, followed closely by EIRE (Ireland) and France, suggesting stronger purchasing activity in these regions. On the other end, Portugal shows the lowest total unit price, followed by Finland and Australia, indicating fewer or smaller transactions. This visualization helps highlight regional purchasing trends and emphasizes countries that contribute more significantly to total sales.
 
@@ -101,7 +113,7 @@ We used MAE to know how well the model is performing by measuring the means of p
 
 ## Implement k-fold cross validation for k = 10.
 
-```{r}
+```{r linear, include=FALSE}
 # Step 1: Model specification
 lm_spec <- linear_reg() %>% 
   # Output Y is quantitative
@@ -126,7 +138,7 @@ e_commerce_cv = lm_spec %>%
  )
 ```
 
-```{r}
+```{r mae, include=FALSE}
 e_commerce_cv %>% collect_metrics()
 ```
 
@@ -147,28 +159,28 @@ model_2 <- lm_spec%>%
  fit(unit_price ~ country * quantity+ invoice_date, data =  e_commerce_2011)
 ```
 
-```{r}
+```{r  echo=TRUE,eval = FALSE}
 model_1 %>% glance()
 ```
 
 
-```{r}
+```{r  echo=TRUE,eval = FALSE}
 model_2 %>% glance()
 ```
 
-```{r}
+```{r  echo=TRUE,eval = FALSE}
 model_1 %>%
  augment(new_data =e_commerce_2011) %>%
  mae(truth = unit_price, estimate = .pred)
 ```
 
-```{r}
+```{r  echo=TRUE,eval = FALSE}
 model_2 %>%
  augment(new_data = e_commerce_2011) %>%
  mae(truth = unit_price, estimate = .pred)
 ```
 
-```{r cv_mae, include=FALSE }
+```{r cv_mae1, include=FALSE }
 knitr::opts_chunk$set(cache = TRUE)
 # 10-fold cross-validation for model_1
  set.seed(244)
@@ -179,7 +191,7 @@ knitr::opts_chunk$set(cache = TRUE)
  )
 ```
 
-```{r echo=TRUE,eval = FALSE}
+```{r cv_mae2, include=FALSE}
 knitr::opts_chunk$set(cache = TRUE)
 # 10-fold cross-validation for model_2
  set.seed(244)
@@ -190,25 +202,24 @@ knitr::opts_chunk$set(cache = TRUE)
  )
 ```
 
-7. Display evaluation metrics for your different models in a clean, organized way.  This display should include both the estimated CV metric as well as its standard deviation.  
 
-```{r}
+```{r echo=TRUE,eval = FALSE}
 model_1_cv %>% collect_metrics()
 ```
 
 
-```{r}
+```{r echo=TRUE,eval = FALSE}
 model_2_cv %>% collect_metrics()
 ```
 
-```{r}
+```{r echo=TRUE,eval = FALSE}
 model_1_cv %>%
   unnest(.metrics) %>%
   dplyr::filter(.metric =="mae") %>%
   summarize(base::mean(.estimate))
 ```
 
-```{r}
+```{r echo=TRUE,eval = FALSE}
 model_2_cv %>%
   unnest(.metrics) %>%
   dplyr::filter(.metric =="mae") %>%
@@ -221,9 +232,88 @@ model_2_cv %>%
 | `model_1` |    3.374663 	|     3.406162	 |
 | `model_2` |    3.400458   |     3.464405	 |
 
-Based on both the in-sample and cross-validation MAE, model_1 performs slightly better. For model_1, the MAE is consistent across training (3.37) and validation (3.41), suggesting that the model generalizes well to new data. In contrast, model_2 has a slightly higher CV MAE (3.46) than its in-sample MAE (3.40), indicating potential overfitting — it may not perform as well on unseen data.
+Based on the in-sample MAE and CV MAE, model 1 appears to be performing little better. For model 1, it looks like the MAE is consistent it’s measured in sample (3.37) and CV (3.41). However, model 2 seem slightly higher CV MAE (3.46) than in - sample MAE(3.40), suggesting overfitting.
 
-Based on the in-sample MAE and CV MAE,, model 1 appears to be performing little better. For model 1, it looks like the MAE is consistent it’s measured in sample (3.37) and CV (3.41). However, model 2 seem slightly higher CV MAE (3.46) than in - sample MAE(3.40), suggesting overfitting.
+## LOOCV 
+
+### LOOCV with k = n - 1 
+
+```{r echo=TRUE,eval = FALSE}
+# loocv for model_1, k = nrow()
+set.seed(244)
+model_1_loocv<- lm_spec%>%
+  fit_resamples(unit_price~country + quantity,
+                resamples= vfold_cv(e_commerce_2011, v = nrow(e_commerce_2011)),
+                metrics = metric_set(mae))
+```
+
+
+```{r echo=TRUE,eval = FALSE}
+model_1_loocv %>%
+  collect_metrics()
+```
+
+
+```{r echo=TRUE,eval = FALSE }
+# loocv for model_2, k = nrow()
+set.seed(244)
+model_2_loocv<- lm_spec%>%
+  fit_resamples(unit_price ~ country * quantity + invoice_date,
+                resamples= vfold_cv(e_commerce_2011, v = nrow(e_commerce_2011)),
+                metrics = metric_set(mae))
+```
+
+```{r echo=TRUE,eval = FALSE}
+model_2_loocv %>%
+  collect_metrics()
+```
+
+### LOOCV with k = 5
+```{r echo=TRUE,eval = FALSE }
+# loocv for model_21 k = 5
+ set.seed(244)
+model_1_LCV_5<- lm_spec%>%
+   fit_resamples(unit_price~country + quantity, 
+       resamples= vfold_cv(e_commerce_2011, v = 5),
+       metrics = metric_set(mae)
+ )
+```
+
+
+```{r echo=TRUE,eval = FALSE }
+model_1_LCV_5 %>%
+ collect_metrics()
+```
+
+
+```{r echo=TRUE,eval = FALSE }
+# lCV 5 for model_2 k = 5
+set.seed(244)
+model_2_LCV_5<- lm_spec%>%
+   fit_resamples(unit_price ~ country * quantity + invoice_date, 
+       resamples= vfold_cv(e_commerce_2011, v = 5),
+       metrics = metric_set(mae)
+ )
+```
+
+
+```{r echo=TRUE,eval = FALSE}
+model_2_LCV_5%>%
+ collect_metrics()
+```
+
+9. Select your final model based on which one has the smallest CV error.
+
+| Model     | LOOCV MAE     | 5 LOOCV MAE    |
+|:----------|--------------:|---------------:|
+| `model_1` |    3.39126	  |      3.419732	 |
+| `model_2` |    3.46173    |      3.488275	 |
+
+The smallest CV error is model_1 with LOOCV MAE  which ahs 3.39126
+
+Based on the LOOCV MAE  and 5 LOOCV MAE, model 1 appears to be performing little better. For model 1, it looks like the MAE is consistent it’s measured LOOCV MAE (3.39) and 5 LOOCV MAE  (3.41). However, model 2 seem slightly higher 5 LOOCV MAE (3.48) than LOOCV MAE (3.46), suggesting overfitting.
+
+Therefore, in CV and LOOCV, in both model 1 perform better than model 2. 
 
 # Unsupervised Learning with K-Means Clustering
 
@@ -236,9 +326,9 @@ $$
 $$
 We are using MAE to calculate the error metric. MAE IS measure the average OF actual and prediction value. 
 
-### Show visuals to demonstrate your clustering. 
+### Visuals of clustering
 
-```{r}
+```{r, k-mean, include=FALSE }
 e_commerce_2011 <- e_commerce_2011 %>%
   dplyr::filter(!is.na(invoice_no) & !is.na(description) & !is.na(stock_code)
          & !is.na(quantity) & !is.na(invoice_date) & !is.na(unit_price)
@@ -249,7 +339,7 @@ e_commerce_2011_reduced <- e_commerce_2011 %>% select(unit_price, quantity)
 ```
 
 
-```{r}
+```{r echo=TRUE,eval = FALSE}
 set.seed(244)
  # Run the K-means algorithm
  kmeans_3_round_1 <- kmeans(scale(e_commerce_2011_reduced), centers = 3)
@@ -259,13 +349,13 @@ set.seed(244)
    ggplot(aes(x = unit_price, y =quantity, color = kmeans_cluster))+
    geom_point(size = 3) +
    theme(legend.position = "none") +
-   labs(title = "K-Mean")+
+   labs(title = "K-Mean of unit price & quantity")+
    theme_minimal()
  
 ```
 
 
-### K-Means Clusters Versus Known country Groupings
+### K-Means Clusters Versus Known Country Groupings
 ```{r}
 ggplot(data = e_commerce_2011, aes(x = unit_price, y =quantity, color =
  country)) +
@@ -279,7 +369,7 @@ The chart displayed illustrates the grouping of transactions based on unit price
 
 ### Justify the choice of the number of clusters (K) with Silhouette.
 
-```{r}
+```{r silhouette, include=FALSE }
  fviz_nbclust(scale(e_commerce_2011_reduced), kmeans, method='silhouette')
 
 ```
